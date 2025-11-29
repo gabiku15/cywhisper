@@ -1,0 +1,13 @@
+build
+install
+buid.txt
+venv
+pyproject__
+build.txt
+whisper.cpp/src/whisper.cpp
+
+*.log
+*.txt
+setup.py
+test*.py
+tempCodeRunnerFile.py

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["scikit-build-core>=0.5.0", "Cython>=3.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "cywhisper"
+version = "0.1.0"
+requires-python = ">=3.8"
+
+[tool.scikit-build]
+cmake.source-dir = "."
+cmake.build-type = "Release"
+cmake.minimum-version = "3.15"
+cmake.verbose = true
+wheel.install-dir = "cywhisper"
+wheel.exclude = ["cywhisper/include", "cywhisper/lib"]
+
+[tool.scikit-build.cmake.define]
+# BLAS
+GGML_BLAS = { env = "GGML_BLAS", default = "OFF" }
+GGML_BLAS_VENDOR = { env = "GGML_BLAS_VENDOR", default = "" }
+BLAS_DIR = { env = "BLAS_DIR", default = "" }
+
+# CUDA
+GGML_CUDA = { env = "GGML_CUDA", default = "OFF" }
+CUDA_DIR = { env = "CUDA_DIR", default = "" }
+
+# Vulkan
+GGML_VULKAN = { env = "GGML_VULKAN", default = "OFF" }
+Vulkan_DIR = { env = "Vulkan_DIR", default = "" }
+
+# SDL2
+WHISPER_SDL2 = { env = "WHISPER_SDL2", default = "ON" }
