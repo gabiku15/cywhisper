@@ -7,6 +7,15 @@ ctypedef bint _bool
 cdef nogil:
     cdef const int WHISPER_SAMPLE_RATE = 16000
 
+cdef extern from "ggml.h" nogil:
+    enum ggml_log_level:
+        GGML_LOG_LEVEL_NONE  = 0,
+        GGML_LOG_LEVEL_DEBUG = 1,
+        GGML_LOG_LEVEL_INFO  = 2,
+        GGML_LOG_LEVEL_WARN  = 3,
+        GGML_LOG_LEVEL_ERROR = 4,
+        GGML_LOG_LEVEL_CONT  = 5
+
 cdef extern from "whisper.h" nogil:
     enum whisper_sampling_strategy:
         WHISPER_SAMPLING_GREEDY = 0,
@@ -75,6 +84,10 @@ cdef extern from "whisper.h" nogil:
         _bool vad
         const char * vad_model_path
         whisper_vad_params vad_params
+
+    # logging
+    ctypedef void (*ggml_log_callback)(ggml_log_level level, const char * text, void * user_data) noexcept nogil
+    cdef void whisper_log_set(ggml_log_callback log_callback, void * user_data)
     
     cdef whisper_context * whisper_init_from_file_with_params(const char* path_model, whisper_context_params params)
     cdef void whisper_free (whisper_context *ctx)

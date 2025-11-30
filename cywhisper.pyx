@@ -1,16 +1,17 @@
 # cython: embedsignature=True  
 # cython: embedsignature.format=python
 
+# python
 import time
-from typing import Coroutine
 import os
 import logging
-from libcpp.vector cimport vector
-from libc.stdint cimport int_fast64_t
-from datetime import datetime
 import asyncio
 import concurrent.futures
+from datetime import datetime
 
+# cython
+from libcpp.vector cimport vector
+from libc.stdint cimport int_fast64_t
 cimport cywhisper
 
 # setting logger
@@ -44,7 +45,7 @@ cdef class Whisper:
     cdef int_fast64_t start_time
     cdef bint no_fallback
 
-    cdef object _recognize_corout
+    # cdef object _whisper_log_file
     cdef object _recognize_future
     cdef object _loop
 
@@ -119,8 +120,13 @@ cdef class Whisper:
 
         self._whisper_path = whisper_model_path.encode('utf-8')
         self._vad_path = vad_model_path.encode('utf-8')
-          
-        cdef int capture_id = -1 
+
+
+        cdef int capture_id
+        cdef whisper_context_params cparams
+        cdef whisper_vad_params vad_params
+
+        capture_id = -1 
         self._audio = new audio_async(self._length_ms)  
         if not self._audio.init(capture_id, WHISPER_SAMPLE_RATE):
             logger.error("Audio init is failed!")
@@ -131,11 +137,11 @@ cdef class Whisper:
             raise ValueError("Undefined language")
 
         ggml_backend_load_all()  
-           
-        cdef whisper_context_params cparams = whisper_context_default_params()
+                
+        cparams = whisper_context_default_params()
         cparams.use_gpu = True
         cparams.flash_attn = True
-        
+                
         # cdef bytes whisper_path = self.whisper_path.encode('utf-8')
         self._ctx = whisper_init_from_file_with_params(  
             self._whisper_path.c_str(),   
@@ -144,14 +150,14 @@ cdef class Whisper:
         if self._ctx == NULL:  
             raise RuntimeError("Failed to initialize whisper context") 
 
-        cdef whisper_vad_params vad_params = whisper_vad_default_params()
+        vad_params = whisper_vad_default_params()
         vad_params.threshold = 0.5
         vad_params.min_speech_duration_ms = 250
         vad_params.min_silence_duration_ms = 100
         vad_params.max_speech_duration_s = float('inf')
         vad_params.speech_pad_ms = 30
         vad_params.samples_overlap = 0.1
-          
+                
         self._full_params = whisper_full_default_params(whisper_sampling_strategy.WHISPER_SAMPLING_GREEDY) 
         self._full_params.language = cpp_language 
         self._full_params.n_threads = min(4, os.cpu_count() or 4)
@@ -167,7 +173,7 @@ cdef class Whisper:
         self._full_params.tdrz_enable = False
 
         self._full_params.temperature_inc = 0.0 if self.no_fallback else self._full_params.temperature_inc
-          
+                
         if self.use_vad:  
             self._full_params.vad = True  
             self._full_params.vad_model_path = self._vad_path.c_str()
@@ -208,7 +214,6 @@ cdef class Whisper:
         """Start async recognize"""
 
         if not self._is_running and self._is_completed:
-            # self._recognize_corout = asyncio.to_thread(self.recognize)
             self._recognize_future = asyncio.run_coroutine_threadsafe(asyncio.to_thread(self.recognize), self._loop)
             self._is_running = True
             self._is_break = False  
